@@ -1,6 +1,6 @@
 from src.utils import *
 from pathlib import Path
-from src import logger
+from src import logging
 
 logger()
 
