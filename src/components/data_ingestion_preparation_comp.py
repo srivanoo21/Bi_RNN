@@ -1,7 +1,8 @@
 import tensorflow_datasets as tfds
-from src.constants import *
+from src.constants import * 
 import tensorflow as tf
 from src import logging
+from src.utils import save_bin
 
 
 class DataIngestionPreparation:
@@ -14,17 +15,23 @@ class DataIngestionPreparation:
         logging.info(f"{self.dataset_name} dataset downloaded with info:\n{info}")
 
     def shuffle_and_batch(self):
-        self.train_ds = train_ds.shuffle(TRAINING_BUFFER_SIZE).batch(TRAINING_BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
-        self.test_ds = test_ds.batch(TRAINING_BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+        self.train_ds = self.train_ds.shuffle(TRAINING_BUFFER_SIZE).batch(TRAINING_BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+        self.test_ds = self.test_ds.batch(TRAINING_BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
         logging.info(f"Datasets are now shuffled and batched!")
 
     def encode_on_train_data():
-        encoder = tf.keras.layers.TextVectorization(max_tokens=TRAINING_VOCAB_SIZE)
-        encoder.adapt(self.train_ds.map(lambda text, label: text))
+        self.encoder = tf.keras.layers.TextVectorization(max_tokens=TRAINING_VOCAB_SIZE)
+        self.encoder.adapt(self.train_ds.map(lambda text, label: text))
         logging.info(f"Encoding on train ds is done!")
 
-    def save_encoder(self):
-        pass 
+    def save_artifacts(self):
+        self._save_encoder()
+        self._save_train_and_test_data()
+        logging.info(f"artifacts saved successfully!")
 
-    def save_train_and_test_data(self):
-        pass
+    def _save_encoder(self):
+        save_bin(data=self.encoder, path='artifacts/encoder.bin')
+
+    def _save_train_and_test_data(self):
+        save_bin(data=self.train_ds, path='artifacts/train_ds.bin')
+        save_bin(data=self.test_ds, path='artifacts/test_ds.bin')
